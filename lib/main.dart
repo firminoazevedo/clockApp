@@ -16,22 +16,25 @@ class Pomodoro extends StatefulWidget {
 }
 
 class _PomodoroState extends State<Pomodoro> {
+  bool tempoDeEstudo = false;
   bool comecou = false;
-  double porcentagem = 0;
-  static int tempoInMinutos = 5;
+  double porcentagem = 0.0;
+  static int tempoInMinutos = 25;
   int tempoInSec = tempoInMinutos * 60;
-  double pauseTime = 5;
-
+  int pauseTime = 5;
   Timer timer;
 
   _pararContador(){
     comecou = false;
+    tempoInMinutos = tempoDeEstudo ? 5 : 25;
+    print(tempoDeEstudo);
     setState(() {
     });
   }
 
   _comecarContador(){
     comecou = true;
+    porcentagem = 0.0;
     int time = tempoInMinutos * 60;
     double secPorcentagem = (time/100);
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -42,21 +45,38 @@ class _PomodoroState extends State<Pomodoro> {
         print(time);
         if (time>0){
             time--;
-        if (time % 60 == 0){
+        if (time % 60 == 0){ // Um minuto se passou
           tempoInMinutos --;
         }
-        if (time % secPorcentagem == 0){
-          if(porcentagem < 1){
+        if (time % secPorcentagem == 0){ //queremos ver 1% é igual a quantos segundos para nossa barra de progresso
+          if(porcentagem < 0.99){
             porcentagem += 0.01;
           } else {
             porcentagem = 1;
           }
         }
       } else {
-        porcentagem = 0;
-        tempoInMinutos = 25;
+        porcentagem = 0.0;
         timer.cancel();
         comecou = false;
+        showDialog(context: context,
+          builder: (BuildContext context) => AlertDialog(
+          title: Text('Tempo terminado!'),
+          content: Text('Começar tempo de ${tempoDeEstudo ? "estudo": "pausa" }'),
+          actions: [
+            FlatButton(onPressed: (){
+              tempoDeEstudo = true;
+              tempoInMinutos = tempoDeEstudo ? 5 : 25;
+              _comecarContador();
+              Navigator.of(context).pop();
+            }, child: Text('Sim')),
+            FlatButton(onPressed: (){
+              tempoInMinutos = 25;
+              tempoDeEstudo = false;
+              Navigator.of(context).pop();
+            }, child: Text('Não'))
+          ],
+        ));
       }
     });
     });
@@ -97,7 +117,7 @@ class _PomodoroState extends State<Pomodoro> {
                   progressColor: Colors.white,
                   center: Text('$tempoInMinutos', style: TextStyle(
                     color: Colors.white,
-                    fontSize: 35,
+                    fontSize: 45,
                   ),),
               )),
             SizedBox(height: 30,),
@@ -125,7 +145,7 @@ class _PomodoroState extends State<Pomodoro> {
                         child: Column(
                           children: [
                             Text('Tempo para estudar'),
-                            Text('$tempoInMinutos', style: TextStyle(
+                            Text('25', style: TextStyle(
                               fontSize: 50,
                               color: Colors.grey[800]
                             ),),
